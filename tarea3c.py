@@ -59,7 +59,7 @@ def on_key(window, key, scancode, action, mods):
 
 
 
-def transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, color):
+def transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, color, scene):
     # start new frame context
     imgui.new_frame()
 
@@ -79,10 +79,32 @@ def transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angle
     edited, scaleY = imgui.slider_float("scale Y", scaleY, 0.0, 3.0)
     edited, scaleZ = imgui.slider_float("scale Z", scaleZ, 0.0, 3.0)
     edited, color = imgui.color_edit3("Color", color[0], color[1], color[2])
-
-
+    show, _ = imgui.collapsing_header("Nodes") 
     global controller
+    
+    if show:
+      if imgui.tree_node(text=str(scene.name)):
+          for i in range(0,len(scene.childs)):
+              if imgui.tree_node(text=str(scene.childs[i].name)):
+                  scene.childs[i].transform = tr.matmul([scene.childs[i].transform, transform])
+                  imgui.tree_pop()
+          imgui.tree_pop()
+
+
+
     edited, checked = imgui.checkbox("wireframe", not controller.fillPolygon)
+    if imgui.button("Reset!"):
+      locationX = 0.0
+      locationY = 0.0
+      locationZ = 0.0
+      angleXY = 0.0
+      angleYZ = 0.0
+      angleXZ = 0.0
+      scaleX = 1.0
+      scaleY = 1.0
+      scaleZ = 1.0
+      
+    
     if edited:
         controller.fillPolygon = not checked
 
@@ -94,7 +116,39 @@ def transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angle
     imgui.render()
     imgui.end_frame()
 
-    return locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, color
+    return locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, color, scene
+
+
+
+def create_tree(pipeline):
+    # Piramide verde
+    green_pyramid =  bs.createColorNormalsCube(0, 1, 0)
+    gpuGreenPyramid = es.GPUShape().initBuffers()
+    pipeline.setupVAO(gpuGreenPyramid)
+    gpuGreenPyramid.fillBuffers(green_pyramid.vertices, green_pyramid.indices, GL_STATIC_DRAW)
+
+    # Cubo cafe
+    brown_quad = bs.createColorNormalsCube(139/255, 69/255, 19/255)
+    gpuBrownQuad = es.GPUShape().initBuffers()
+    pipeline.setupVAO(gpuBrownQuad)
+    gpuBrownQuad.fillBuffers(brown_quad.vertices, brown_quad.indices, GL_STATIC_DRAW)
+
+    # Tronco
+    tronco = sg.SceneGraphNode("Tronco")
+    tronco.transform = tr.scale(0.05, 0.05, 0.2)
+    tronco.childs += [gpuBrownQuad]
+
+    # Hojas
+    hojas = sg.SceneGraphNode("Hojas")
+    hojas.transform = tr.matmul([tr.translate(0, 0, 0.1), tr.uniformScale(0.25)])
+    hojas.childs += [gpuGreenPyramid]
+
+    # Arbol
+    tree = sg.SceneGraphNode("Arbol")
+    tree.transform = tr.identity()
+    tree.childs += [tronco, hojas]
+
+    return tree
 
 
 
@@ -148,13 +202,16 @@ if __name__ == "__main__":
     glfw.set_key_callback(window, on_key)
     glfw.set_window_size_callback(window, window_resize)
 
+  
+    
+    
     locationX = 0.0
     locationY = 0.0
     locationZ = 0.0
     angleXY = 0.0
     angleYZ = 0.0
     angleXZ = 0.0
-    color = (1.0, 0.0, 0.0)
+    color = (1.0, 1.0, 1.0)
     scaleX = 1.0
     scaleY = 1.0
     scaleZ = 1.0
@@ -215,19 +272,23 @@ if __name__ == "__main__":
           np.array([0, 0, 1])
           )
         
-        locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, color = \
-            transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, color)
+        scene = create_tree(lightingPipeline)
+        
+        locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, color, scene = \
+            transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, color, scene)
 
         # Setting uniforms and drawing the Quad
-        gpuCube = createGPUShape(lightingPipeline, bs.createColorNormalsCube(color[0], color[1], color[2]))
+        
 
-        model= tr.matmul(
+        transform = tr.matmul(
                         [tr.translate(locationX, locationY, locationZ),
                         tr.rotationZ(angleXY),
                         tr.rotationY(angleXZ),
                         tr.rotationX(angleYZ),
                         tr.scale(scaleX, scaleY, scaleZ)]
                         )
+        
+        
         
         # Setting all uniform shader variables
 
@@ -254,10 +315,9 @@ if __name__ == "__main__":
 
         glUniformMatrix4fv(glGetUniformLocation(lightingPipeline.shaderProgram, "projection"), 1, GL_TRUE, projection)
         glUniformMatrix4fv(glGetUniformLocation(lightingPipeline.shaderProgram, "view"), 1, GL_TRUE, view)
-        glUniformMatrix4fv(glGetUniformLocation(lightingPipeline.shaderProgram, "model"), 1, GL_TRUE, model)
         
         
-        lightingPipeline.drawCall(gpuCube)
+        sg.drawSceneGraphNode(scene, lightingPipeline, "model")
         # Drawing the imgui texture over our drawing
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
         impl.render(imgui.get_draw_data())
@@ -266,7 +326,7 @@ if __name__ == "__main__":
         glfw.swap_buffers(window)
 
     # freeing GPU memory
-    gpuCube.clear()
+    scene.clear()
 
     impl.shutdown()
     glfw.terminate()
