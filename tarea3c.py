@@ -59,7 +59,7 @@ def on_key(window, key, scancode, action, mods):
 
 
 
-def transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, color):
+def transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, color):
     # start new frame context
     imgui.new_frame()
 
@@ -75,7 +75,11 @@ def transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angle
     edited, angleXY = imgui.slider_float("AngleXY", angleXY, -np.pi, np.pi)
     edited, angleYZ = imgui.slider_float("AngleYZ", angleYZ, -np.pi, np.pi)
     edited, angleXZ = imgui.slider_float("AngleXZ", angleXZ, -np.pi, np.pi)
+    edited, scaleX = imgui.slider_float("scale X", scaleX, 0.0, 3.0)
+    edited, scaleY = imgui.slider_float("scale Y", scaleY, 0.0, 3.0)
+    edited, scaleZ = imgui.slider_float("scale Z", scaleZ, 0.0, 3.0)
     edited, color = imgui.color_edit3("Color", color[0], color[1], color[2])
+
 
     global controller
     edited, checked = imgui.checkbox("wireframe", not controller.fillPolygon)
@@ -90,7 +94,7 @@ def transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angle
     imgui.render()
     imgui.end_frame()
 
-    return locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, color
+    return locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, color
 
 
 
@@ -150,11 +154,13 @@ if __name__ == "__main__":
     angleXY = 0.0
     angleYZ = 0.0
     angleXZ = 0.0
-    color = (1.0, 1.0, 1.0)
+    color = (1.0, 0.0, 0.0)
+    scaleX = 1.0
+    scaleY = 1.0
+    scaleZ = 1.0
     
     t0 = glfw.get_time()
     camera_theta = np.pi / 4
-    camera_phi = np.pi / 4
     cameraZ = 0
 
     while not glfw.window_should_close(window):
@@ -195,12 +201,12 @@ if __name__ == "__main__":
             camera_theta += 2 * dt
             
         if (glfw.get_key(window, glfw.KEY_UP) == glfw.PRESS):
-            cameraZ += 1 * dt
+            cameraZ += 2 * dt
             
         if (glfw.get_key(window, glfw.KEY_DOWN) == glfw.PRESS):
-            cameraZ -= 1 * dt    
-        camX = 4 * np.sin(camera_theta)
-        camY = 4 * np.cos(camera_theta)
+            cameraZ -= 2 * dt    
+        camX = 3 * np.sin(camera_theta)
+        camY = 3 * np.cos(camera_theta)
         camZ = cameraZ
         viewPos = np.array([camX, camY, camZ])
         view = tr.lookAt(
@@ -209,8 +215,8 @@ if __name__ == "__main__":
           np.array([0, 0, 1])
           )
         
-        locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, color = \
-            transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, color)
+        locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, color = \
+            transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, color)
 
         # Setting uniforms and drawing the Quad
         gpuCube = createGPUShape(lightingPipeline, bs.createColorNormalsCube(color[0], color[1], color[2]))
@@ -219,7 +225,8 @@ if __name__ == "__main__":
                         [tr.translate(locationX, locationY, locationZ),
                         tr.rotationZ(angleXY),
                         tr.rotationY(angleXZ),
-                        tr.rotationX(angleYZ)]
+                        tr.rotationX(angleYZ),
+                        tr.scale(scaleX, scaleY, scaleZ)]
                         )
         
         # Setting all uniform shader variables
@@ -231,7 +238,7 @@ if __name__ == "__main__":
 
         # Object is barely visible at only ambient. Diffuse behavior is slightly red. Sparkles are white
         glUniform3f(glGetUniformLocation(lightingPipeline.shaderProgram, "Ka"), 0.2, 0.2, 0.2)
-        glUniform3f(glGetUniformLocation(lightingPipeline.shaderProgram, "Kd"), 0.5, 0.5, 0.5)
+        glUniform3f(glGetUniformLocation(lightingPipeline.shaderProgram, "Kd"), 0.9, 0.9, 0.9)
         glUniform3f(glGetUniformLocation(lightingPipeline.shaderProgram, "Ks"), 1.0, 1.0, 1.0)
 
         # TO DO: Explore different parameter combinations to understand their effect!
