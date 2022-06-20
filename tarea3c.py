@@ -82,11 +82,48 @@ def transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angle
     show, _ = imgui.collapsing_header("Nodes") 
     global controller
     
+    transform = tr.matmul(
+                [tr.translate(locationX, locationY, locationZ),
+                tr.rotationZ(angleXY),
+                tr.rotationY(angleXZ),
+                tr.rotationX(angleYZ),
+                tr.scale(scaleX, scaleY, scaleZ)]
+                )
+    
+    scene.transform = tr.matmul([scene.transform, transform])
     if show:
       if imgui.tree_node(text=str(scene.name)):
           for i in range(0,len(scene.childs)):
+            
               if imgui.tree_node(text=str(scene.childs[i].name)):
-                  scene.childs[i].transform = tr.matmul([scene.childs[i].transform, transform])
+                  imgui.same_line()
+                  imgui.text("(selected)")
+
+                  imgui.begin(str(scene.childs[i].name), False, imgui.WINDOW_ALWAYS_AUTO_RESIZE)
+                  global _locationX
+                  global _locationY
+                  global _locationZ
+                  global _angleXY
+                  global _angleYZ
+                  global _angleXZ
+                  global _scaleX
+                  global _scaleY
+                  global _scaleZ
+
+
+                  _locationX, _locationY, _locationZ, _angleXY, _angleYZ, _angleXZ, _scaleX, _scaleY, _scaleZ = \
+            transformGuiOverlayNode(_locationX, _locationY, _locationZ, _angleXY, _angleYZ, _angleXZ, _scaleX, _scaleY, _scaleZ)
+
+                  scene.childs[i].transform = tr.matmul([scene.childs[i].transform, 
+                        tr.translate(_locationX, _locationY, _locationZ),
+                        tr.rotationZ(_angleXY),
+                        tr.rotationY(_angleXZ),
+                        tr.rotationX(_angleYZ),
+                        tr.scale(_scaleX, _scaleY, _scaleZ)])
+                  
+                  imgui.end()
+                  
+                  
                   imgui.tree_pop()
           imgui.tree_pop()
 
@@ -118,7 +155,20 @@ def transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angle
 
     return locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, color, scene
 
+def transformGuiOverlayNode(locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ):
+    edited, locationX = imgui.slider_float("location X", locationX, -1.0, 1.0)
+    edited, locationY = imgui.slider_float("location Y", locationY, -1.0, 1.0)
+    edited, locationZ = imgui.slider_float("location Z", locationZ, -1.0, 1.0)
+    edited, angleXY = imgui.slider_float("AngleXY", angleXY, -np.pi, np.pi)
+    edited, angleYZ = imgui.slider_float("AngleYZ", angleYZ, -np.pi, np.pi)
+    edited, angleXZ = imgui.slider_float("AngleXZ", angleXZ, -np.pi, np.pi)
+    edited, scaleX = imgui.slider_float("scale X", scaleX, 0.0, 3.0)
+    edited, scaleY = imgui.slider_float("scale Y", scaleY, 0.0, 3.0)
+    edited, scaleZ = imgui.slider_float("scale Z", scaleZ, 0.0, 3.0)
+    
 
+      
+    return locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ
 
 def create_tree(pipeline):
     # Piramide verde
@@ -216,6 +266,20 @@ if __name__ == "__main__":
     scaleY = 1.0
     scaleZ = 1.0
     
+    _locationX = 0.0
+    _locationY = 0.0
+    _locationZ = 0.0
+    _angleXY = 0.0
+    _angleYZ = 0.0
+    _angleXZ = 0.0
+    _color = (1.0, 1.0, 1.0)
+    _scaleX = 1.0
+    _scaleY = 1.0
+    _scaleZ = 1.0
+    
+    
+
+    
     t0 = glfw.get_time()
     camera_theta = np.pi / 4
     cameraZ = 0
@@ -278,15 +342,8 @@ if __name__ == "__main__":
             transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, color, scene)
 
         # Setting uniforms and drawing the Quad
-        
 
-        transform = tr.matmul(
-                        [tr.translate(locationX, locationY, locationZ),
-                        tr.rotationZ(angleXY),
-                        tr.rotationY(angleXZ),
-                        tr.rotationX(angleYZ),
-                        tr.scale(scaleX, scaleY, scaleZ)]
-                        )
+
         
         
         
@@ -304,7 +361,7 @@ if __name__ == "__main__":
 
         # TO DO: Explore different parameter combinations to understand their effect!
 
-        glUniform3f(glGetUniformLocation(lightingPipeline.shaderProgram, "lightPosition"), -4, -4, 4)
+        glUniform3f(glGetUniformLocation(lightingPipeline.shaderProgram, "lightPosition"), 4, 4, 4)
         glUniform3f(glGetUniformLocation(lightingPipeline.shaderProgram, "viewPosition"), viewPos[0], viewPos[1],
                     viewPos[2])
         glUniform1ui(glGetUniformLocation(lightingPipeline.shaderProgram, "shininess"), 100)
