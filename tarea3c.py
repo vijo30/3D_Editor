@@ -59,7 +59,7 @@ def on_key(window, key, scancode, action, mods):
 
 
 
-def transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, color, scene):
+def transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, scene):
     # start new frame context
     imgui.new_frame()
 
@@ -67,7 +67,7 @@ def transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angle
     imgui.begin("3D Transformations control", False, imgui.WINDOW_ALWAYS_AUTO_RESIZE)
 
     # draw text label inside of current window
-    imgui.text("Configuration sliders")
+    imgui.text("Configuration sliders: "+ str(scene.name))
 
     edited, locationX = imgui.slider_float("location X", locationX, -1.0, 1.0)
     edited, locationY = imgui.slider_float("location Y", locationY, -1.0, 1.0)
@@ -78,7 +78,6 @@ def transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angle
     edited, scaleX = imgui.slider_float("scale X", scaleX, 0.0, 3.0)
     edited, scaleY = imgui.slider_float("scale Y", scaleY, 0.0, 3.0)
     edited, scaleZ = imgui.slider_float("scale Z", scaleZ, 0.0, 3.0)
-    edited, color = imgui.color_edit3("Color", color[0], color[1], color[2])
     show, _ = imgui.collapsing_header("Nodes") 
     global controller
     
@@ -93,45 +92,11 @@ def transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angle
     scene.transform = tr.matmul([scene.transform, transform])
     if show:
       if imgui.tree_node(text=str(scene.name)):
-          for i in range(0,len(scene.childs)):
-            
-              if imgui.tree_node(text=str(scene.childs[i].name)):
-                  imgui.same_line()
-                  imgui.text("(selected)")
-                  imgui.begin(str(scene.childs[i].name), False, imgui.WINDOW_ALWAYS_AUTO_RESIZE)
-                  
-
-
-                  variableList[i] = \
-            transformGuiOverlayNode(variableList[i][0], variableList[i][1], variableList[i][2], variableList[i][3], variableList[i][4], 
-                                    variableList[i][5], variableList[i][6], variableList[i][7], variableList[i][8])
-
-                  scene.childs[i].transform = tr.matmul([scene.childs[i].transform, 
-                        tr.translate(variableList[i][0], variableList[i][1], variableList[i][2]),
-                        tr.rotationZ(variableList[i][3]),
-                        tr.rotationY(variableList[i][4]),
-                        tr.rotationX(variableList[i][5]),
-                        tr.scale(variableList[i][6], variableList[i][7], variableList[i][8])])
-                  
-                  imgui.end()
-                  
-                  
-                  imgui.tree_pop()
-          imgui.tree_pop()
+        iterateNode(scene)
 
 
 
     edited, checked = imgui.checkbox("wireframe", not controller.fillPolygon)
-    if imgui.button("Reset!"):
-      locationX = 0.0
-      locationY = 0.0
-      locationZ = 0.0
-      angleXY = 0.0
-      angleYZ = 0.0
-      angleXZ = 0.0
-      scaleX = 1.0
-      scaleY = 1.0
-      scaleZ = 1.0
       
     
     if edited:
@@ -145,7 +110,7 @@ def transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angle
     imgui.render()
     imgui.end_frame()
 
-    return locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, color, scene
+    return locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, scene
 
 def transformGuiOverlayNode(locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ):
     edited, locationX = imgui.slider_float("location X", locationX, -1.0, 1.0)
@@ -158,9 +123,43 @@ def transformGuiOverlayNode(locationX, locationY, locationZ, angleXY, angleYZ, a
     edited, scaleY = imgui.slider_float("scale Y", scaleY, 0.0, 3.0)
     edited, scaleZ = imgui.slider_float("scale Z", scaleZ, 0.0, 3.0)
     
+    return locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ
+
+    
+    
+def iterateNode(scene):
+
+    for i in range(0,len(scene.childs)):
+        if imgui.tree_node(text=str(scene.childs[i].name)):
+            imgui.same_line()
+            imgui.text("(selected)")
+            imgui.begin(str(scene.childs[i].name), False, imgui.WINDOW_ALWAYS_AUTO_RESIZE)
+            
+
+
+            variableList[i] = \
+      transformGuiOverlayNode(variableList[i][0], variableList[i][1], variableList[i][2], variableList[i][3], variableList[i][4], 
+                              variableList[i][5], variableList[i][6], variableList[i][7], variableList[i][8])
+
+            scene.childs[i].transform = tr.matmul([scene.childs[i].transform, 
+                  tr.translate(variableList[i][0], variableList[i][1], variableList[i][2]),
+                  tr.rotationZ(variableList[i][3]),
+                  tr.rotationY(variableList[i][4]),
+                  tr.rotationX(variableList[i][5]),
+                  tr.scale(variableList[i][6], variableList[i][7], variableList[i][8])])
+            
+            imgui.end()
+
+            
+            imgui.tree_pop()
+
+    imgui.tree_pop()
+    
+
+
+    
 
       
-    return locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ
 
 def create_tree(pipeline):
     # Piramide verde
@@ -193,6 +192,48 @@ def create_tree(pipeline):
     return tree
 
 
+
+def createCar(pipeline, r, g, b):
+    # Creating shapes on GPU memory
+    blackCube = bs.createColorNormalsCube(0, 0, 0)
+    gpuBlackCube = es.GPUShape().initBuffers()
+    pipeline.setupVAO(gpuBlackCube)
+    gpuBlackCube.fillBuffers(blackCube.vertices, blackCube.indices, GL_STATIC_DRAW)
+
+    chasisCube = bs.createColorNormalsCube(r, g, b)
+    gpuChasisCube = es.GPUShape().initBuffers()
+    pipeline.setupVAO(gpuChasisCube)
+    gpuChasisCube.fillBuffers(chasisCube.vertices, chasisCube.indices, GL_STATIC_DRAW)
+
+    # Cheating a single wheel
+    wheel = sg.SceneGraphNode("wheel")
+    wheel.transform = tr.scale(0.2, 0.8, 0.2)
+    wheel.childs += [gpuBlackCube]
+
+    wheelRotation = sg.SceneGraphNode("wheelRotation")
+    wheelRotation.childs += [wheel]
+
+    # Instanciating 2 wheels, for the front and back parts
+    frontWheel = sg.SceneGraphNode("frontWheel")
+    frontWheel.transform = tr.translate(0.3, 0, -0.3)
+    frontWheel.childs += [wheelRotation]
+
+    backWheel = sg.SceneGraphNode("backWheel")
+    backWheel.transform = tr.translate(-0.3, 0, -0.3)
+    backWheel.childs += [wheelRotation]
+
+    # Creating the chasis of the car
+    chasis = sg.SceneGraphNode("chasis")
+    chasis.transform = tr.scale(1, 0.7, 0.5)
+    chasis.childs += [gpuChasisCube]
+
+    # All pieces together
+    car = sg.SceneGraphNode("car")
+    car.childs += [chasis]
+    car.childs += [frontWheel]
+    car.childs += [backWheel]
+
+    return car
 
 if __name__ == "__main__":
 
@@ -253,30 +294,24 @@ if __name__ == "__main__":
     angleXY = 0.0
     angleYZ = 0.0
     angleXZ = 0.0
-    color = (1.0, 1.0, 1.0)
     scaleX = 1.0
     scaleY = 1.0
     scaleZ = 1.0
     
     
     tuple = (0, 0, 0, 0, 0, 0, 1, 1, 1)
-    _locationX = 0.0
-    _locationY = 0.0
-    _locationZ = 0.0
-    _angleXY = 0.0
-    _angleYZ = 0.0
-    _angleXZ = 0.0
-    _color = (1.0, 1.0, 1.0)
-    _scaleX = 1.0
-    _scaleY = 1.0
-    _scaleZ = 1.0
     
-    
-    
+    #scene = create_tree(lightingPipeline)
+    scene = createCar(lightingPipeline, 1, 0, 0)
     variableList = []
-    scene = create_tree(lightingPipeline)
-    for i in range(0,len(scene.childs)):
+    i = 0
+    while i < len(scene.childs):
       variableList.append(tuple)
+      i += 1
+    
+
+
+
     
     t0 = glfw.get_time()
     camera_theta = np.pi / 4
@@ -334,9 +369,10 @@ if __name__ == "__main__":
           np.array([0, 0, 1])
           )
         
-        scene = create_tree(lightingPipeline)
-        locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, color, scene = \
-            transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, color, scene)
+        scene = createCar(lightingPipeline, 1, 0, 0)
+        
+        locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, scene = \
+            transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, scene)
 
         # Setting uniforms and drawing the Quad
 
