@@ -11,7 +11,7 @@ pip install imgui[glfw]
 Another example:
 https://github.com/swistakm/pyimgui/blob/master/doc/examples/integrations_glfw3.py#L2
 """
-
+import copy
 import glfw
 from OpenGL.GL import *
 import OpenGL.GL.shaders
@@ -98,28 +98,20 @@ def transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angle
               if imgui.tree_node(text=str(scene.childs[i].name)):
                   imgui.same_line()
                   imgui.text("(selected)")
-
                   imgui.begin(str(scene.childs[i].name), False, imgui.WINDOW_ALWAYS_AUTO_RESIZE)
-                  global _locationX
-                  global _locationY
-                  global _locationZ
-                  global _angleXY
-                  global _angleYZ
-                  global _angleXZ
-                  global _scaleX
-                  global _scaleY
-                  global _scaleZ
+                  
 
 
-                  _locationX, _locationY, _locationZ, _angleXY, _angleYZ, _angleXZ, _scaleX, _scaleY, _scaleZ = \
-            transformGuiOverlayNode(_locationX, _locationY, _locationZ, _angleXY, _angleYZ, _angleXZ, _scaleX, _scaleY, _scaleZ)
+                  variableList[i] = \
+            transformGuiOverlayNode(variableList[i][0], variableList[i][1], variableList[i][2], variableList[i][3], variableList[i][4], 
+                                    variableList[i][5], variableList[i][6], variableList[i][7], variableList[i][8])
 
                   scene.childs[i].transform = tr.matmul([scene.childs[i].transform, 
-                        tr.translate(_locationX, _locationY, _locationZ),
-                        tr.rotationZ(_angleXY),
-                        tr.rotationY(_angleXZ),
-                        tr.rotationX(_angleYZ),
-                        tr.scale(_scaleX, _scaleY, _scaleZ)])
+                        tr.translate(variableList[i][0], variableList[i][1], variableList[i][2]),
+                        tr.rotationZ(variableList[i][3]),
+                        tr.rotationY(variableList[i][4]),
+                        tr.rotationX(variableList[i][5]),
+                        tr.scale(variableList[i][6], variableList[i][7], variableList[i][8])])
                   
                   imgui.end()
                   
@@ -266,6 +258,8 @@ if __name__ == "__main__":
     scaleY = 1.0
     scaleZ = 1.0
     
+    
+    tuple = (0, 0, 0, 0, 0, 0, 1, 1, 1)
     _locationX = 0.0
     _locationY = 0.0
     _locationZ = 0.0
@@ -278,7 +272,11 @@ if __name__ == "__main__":
     _scaleZ = 1.0
     
     
-
+    
+    variableList = []
+    scene = create_tree(lightingPipeline)
+    for i in range(0,len(scene.childs)):
+      variableList.append(tuple)
     
     t0 = glfw.get_time()
     camera_theta = np.pi / 4
@@ -337,7 +335,6 @@ if __name__ == "__main__":
           )
         
         scene = create_tree(lightingPipeline)
-        
         locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, color, scene = \
             transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, color, scene)
 
