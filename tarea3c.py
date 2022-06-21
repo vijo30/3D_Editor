@@ -95,8 +95,8 @@ def transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angle
         iterateNode(scene)
     
     if imgui.button(label="Save"):
-      with open("copia.txt", "wb") as sc:
-        pickle.dump(scene, sc)
+      with open("copia1.py", "wb") as sc:
+        pickle.dump(scene, sc, pickle.HIGHEST_PROTOCOL)
       print("Saved")
 
 

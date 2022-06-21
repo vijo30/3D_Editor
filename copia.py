@@ -19,11 +19,13 @@ import grafica.performance_monitor as pm
 import grafica.lighting_shaders as ls
 import grafica.transformations as tr
 
-scene = pickle.load(open("copia.txt", "rb"))
-print(scene.name)
-print(scene.transform)
-print(scene.childs[0].name)
-print(scene.childs[0].transform)
+scene0 = pickle.load(open("copia1.py", "rb"))
+print(scene0.name)
+print(scene0.transform)
+print(scene0.childs[0].name)
+print(scene0.childs[0].transform)
+print(scene0.childs[0].childs)
+print(type(scene0.childs[0].childs[0].vao))
 
 # A class to store the application control
 class Controller:
@@ -337,9 +339,7 @@ tuple = (0, 0, 0, 0, 0, 0, 1, 1, 1)
 
 #scene = create_tree(lightingPipeline)
 
-print(scene.name)
-print(scene.childs[0].name)
-print(scene.childs[0].transform)
+
 variableList = []
 
 def addVariables(scene):
@@ -350,7 +350,7 @@ def addVariables(scene):
     variableList.append(tuple)
     i += 1
 
-addVariables(scene)
+addVariables(scene0)
 
 print(variableList)
 
@@ -412,7 +412,7 @@ while not glfw.window_should_close(window):
       np.array([0, 0, 1])
       )
     
-    
+
     locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, scene = \
         transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, scene)
 
@@ -449,7 +449,7 @@ while not glfw.window_should_close(window):
     glUniformMatrix4fv(glGetUniformLocation(lightingPipeline.shaderProgram, "view"), 1, GL_TRUE, view)
     
     
-    sg.drawSceneGraphNode(scene, lightingPipeline, "model")
+    sg.drawSceneGraphNode(scene0, lightingPipeline, "model")
     # Drawing the imgui texture over our drawing
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
     impl.render(imgui.get_draw_data())
