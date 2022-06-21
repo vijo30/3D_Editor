@@ -1,16 +1,3 @@
-# coding=utf-8
-"""
-Simple example using ImGui with GLFW and OpenGL.
-
-More info at:
-https://pypi.org/project/imgui/
-
-Installation:
-pip install imgui[glfw]
-
-Another example:
-https://github.com/swistakm/pyimgui/blob/master/doc/examples/integrations_glfw3.py#L2
-"""
 import glfw
 import pickle
 from OpenGL.GL import *
@@ -32,9 +19,11 @@ import grafica.performance_monitor as pm
 import grafica.lighting_shaders as ls
 import grafica.transformations as tr
 
-__author__ = "Daniel Calderon"
-__license__ = "MIT"
-
+scene = pickle.load(open("copia.txt", "rb"))
+print(scene.name)
+print(scene.transform)
+print(scene.childs[0].name)
+print(scene.childs[0].transform)
 
 # A class to store the application control
 class Controller:
@@ -347,7 +336,7 @@ scaleZ = 1.0
 tuple = (0, 0, 0, 0, 0, 0, 1, 1, 1)
 
 #scene = create_tree(lightingPipeline)
-scene = createCar(lightingPipeline, 1, 0, 0)
+
 print(scene.name)
 print(scene.childs[0].name)
 print(scene.childs[0].transform)
@@ -398,7 +387,7 @@ while not glfw.window_should_close(window):
     else:
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
 
-
+    scene = createCar(lightingPipeline, 1, 0, 0)
 
     # imgui function
     impl.process_inputs()
@@ -423,7 +412,6 @@ while not glfw.window_should_close(window):
       np.array([0, 0, 1])
       )
     
-    scene = createCar(lightingPipeline, 1, 0, 0)
     
     locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, scene = \
         transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, scene)
@@ -474,3 +462,6 @@ scene.clear()
 
 impl.shutdown()
 glfw.terminate()
+
+
+          
