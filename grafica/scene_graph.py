@@ -32,6 +32,7 @@ class SceneGraphNode:
         self.name = name
         self.transform = tr.identity()
         self.childs = []
+        self.parameters = (0, 0, 0, 0, 0, 0, 1, 1, 1)
 
     def clear(self):
         """Freeing GPU memory"""

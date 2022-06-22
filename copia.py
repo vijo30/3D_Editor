@@ -1,3 +1,16 @@
+# coding=utf-8
+"""
+Simple example using ImGui with GLFW and OpenGL.
+
+More info at:
+https://pypi.org/project/imgui/
+
+Installation:
+pip install imgui[glfw]
+
+Another example:
+https://github.com/swistakm/pyimgui/blob/master/doc/examples/integrations_glfw3.py#L2
+"""
 import glfw
 import pickle
 from OpenGL.GL import *
@@ -19,13 +32,9 @@ import grafica.performance_monitor as pm
 import grafica.lighting_shaders as ls
 import grafica.transformations as tr
 
-scene0 = pickle.load(open("copia1.py", "rb"))
-print(scene0.name)
-print(scene0.transform)
-print(scene0.childs[0].name)
-print(scene0.childs[0].transform)
-print(scene0.childs[0].childs)
-print(type(scene0.childs[0].childs[0].vao))
+__author__ = "Daniel Calderon"
+__license__ = "MIT"
+
 
 # A class to store the application control
 class Controller:
@@ -86,8 +95,7 @@ def transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angle
         iterateNode(scene)
     
     if imgui.button(label="Save"):
-      with open("copia.txt", "wb") as sc:
-        pickle.dump(scene, sc)
+      shutil.copyfile("tarea3c.py", "copia.py")
       print("Saved")
 
 
@@ -338,7 +346,7 @@ scaleZ = 1.0
 tuple = (0, 0, 0, 0, 0, 0, 1, 1, 1)
 
 #scene = create_tree(lightingPipeline)
-
+scene1 = createCar(lightingPipeline, 1, 0, 0)
 
 variableList = []
 
@@ -350,9 +358,7 @@ def addVariables(scene):
     variableList.append(tuple)
     i += 1
 
-addVariables(scene0)
 
-print(variableList)
 
 
 
@@ -361,6 +367,7 @@ camera_theta = np.pi / 4
 cameraZ = 0
 
 while not glfw.window_should_close(window):
+
 
     impl.process_inputs()
     # Using GLFW to check for input events
@@ -387,7 +394,7 @@ while not glfw.window_should_close(window):
     else:
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
 
-    scene = createCar(lightingPipeline, 1, 0, 0)
+
 
     # imgui function
     impl.process_inputs()
@@ -412,7 +419,9 @@ while not glfw.window_should_close(window):
       np.array([0, 0, 1])
       )
     
-
+    scene = pickle.load(open('copia1.pickle', 'rb'))
+    addVariables(scene)
+    
     locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, scene = \
         transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, scene)
 
@@ -449,7 +458,7 @@ while not glfw.window_should_close(window):
     glUniformMatrix4fv(glGetUniformLocation(lightingPipeline.shaderProgram, "view"), 1, GL_TRUE, view)
     
     
-    sg.drawSceneGraphNode(scene0, lightingPipeline, "model")
+    sg.drawSceneGraphNode(scene, lightingPipeline, "model")
     # Drawing the imgui texture over our drawing
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
     impl.render(imgui.get_draw_data())
@@ -462,6 +471,3 @@ scene.clear()
 
 impl.shutdown()
 glfw.terminate()
-
-
-          

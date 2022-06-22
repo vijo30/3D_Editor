@@ -82,10 +82,10 @@ def readOFF(filename, color):
 
         vertices = np.asarray(vertices)
         vertices = np.reshape(vertices, (numVertices, 3))
-        print(f'Vertices shape: {vertices.shape}')
+        #print(f'Vertices shape: {vertices.shape}')
 
         normals = np.zeros((numVertices, 3), dtype=np.float32)
-        print(f'Normals shape: {normals.shape}')
+        #print(f'Normals shape: {normals.shape}')
 
         for i in range(numFaces):
             aux = file.readline().strip().split(' ')
@@ -119,7 +119,7 @@ def readOFF(filename, color):
         vertexData = np.concatenate((vertices, color), axis=1)
         vertexData = np.concatenate((vertexData, normals), axis=1)
 
-        print(vertexData.shape)
+        #print(vertexData.shape)
 
         indices = []
         vertexDataF = []
@@ -162,20 +162,18 @@ def createSystem(pipeline):
     earthRotation = sg.SceneGraphNode("earthRotation")
     earthRotation.childs += [earthNode]
 
-    moonRotation = sg.SceneGraphNode("moonRotation")
-    moonRotation.childs += [moonNode]
 
     sunRotation = sg.SceneGraphNode("sunRotation")
     sunRotation.childs += [sunNode]
 
-    moonPosition = sg.SceneGraphNode("moonSystem")
+    moonPosition = sg.SceneGraphNode("moonPosition")
     moonPosition.transform = tr.translate(0.3, 0.0, 0.0)
     moonPosition.childs += [moonRotation]
 
     moonSystem = sg.SceneGraphNode("moonSystem")
     moonSystem.childs += [moonPosition]
 
-    earthPosition = sg.SceneGraphNode("earthSystem")
+    earthPosition = sg.SceneGraphNode("earthPosition")
     earthPosition.transform = tr.translate(1.5, 0.0, 0.0)
     earthPosition.childs += [earthRotation]
     earthPosition.childs += [moonSystem]
