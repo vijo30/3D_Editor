@@ -97,6 +97,13 @@ def transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angle
         iterateNode(scene)
     
     if imgui.button(label="Save"):
+      scene_save = [scene.to_string()]
+      scene_saved = generateTree(scene_save, scene)
+      with open("save.py", "w") as fp:
+        fp.seek(0)
+        for item in scene_saved:
+           fp.write("%s\n" % item)
+        fp.truncate()
       print("Saved")
 
 
@@ -201,7 +208,7 @@ transformGuiOverlayNode(scene.childs[i].parameters[0], scene.childs[i].parameter
         
         
 
-
+    
 
 
     
@@ -287,19 +294,19 @@ angleXZ = 0.0
 scaleX = 1.0
 scaleY = 1.0
 scaleZ = 1.0
-const = scene.transform
+const = scene.transform 
 
-tuple = (0, 0, 0, 0, 0, 0, 1, 1, 1)
+def generateTree(a, scene):
+  for i in range(0,len(scene.childs)):
+      a.append(scene.childs[i].to_string())
+      if not isinstance(scene.childs[i].childs[0],GPUShape):
+          generateTree(a, scene.childs[i]) 
 
-variableList = []
-def addVariables(scene):
-  i = 0
-  while i < len(scene.childs):
-    if not isinstance(scene.childs[i].childs[0],GPUShape):
-      addVariables(scene.childs[i])
-    variableList.append(tuple)
-    i += 1
-addVariables(scene)
+  
+  return a[::-1]
+
+print(scene.childs[0].to_string())
+print(sg.findNode(scene, 'sunNode').transform)
 
 while not glfw.window_should_close(window):
 

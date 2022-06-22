@@ -15,6 +15,7 @@ from OpenGL.GL import *
 import numpy as np
 import grafica.transformations as tr
 import grafica.gpu_shape as gs
+import numpy as np
 
 __author__ = "Daniel Calderon"
 __license__ = "MIT"
@@ -39,7 +40,28 @@ class SceneGraphNode:
 
         for child in self.childs:
             child.clear()
+            
+    def to_string(self):
 
+        return f"""                                                                
+       {self.name} = sg.SceneGraphNode('{self.name}')   
+       {self.name}.transform = {self.transform}                
+       {self.name}.childs += [{self.get_children_as_list()}]
+      """
+
+
+    def get_children_as_list(self):
+      s = ""
+      if isinstance(self.childs[0], gs.GPUShape):
+        return 
+      for child in self.childs:
+        s += f"{child.name}, "
+      r = s[:len(s)- 2]
+      return r 
+      
+    
+  
+  
 
 def findNode(node, name):
     # The name was not found in this path
