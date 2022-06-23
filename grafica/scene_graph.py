@@ -44,16 +44,16 @@ class SceneGraphNode:
     def to_string(self):
 
         return f"""                                                                
-       {self.name} = sg.SceneGraphNode('{self.name}')   
-       {self.name}.transform = {self.transform}                
-       {self.name}.childs += [{self.get_children_as_list()}]
+{self.name} = sg.SceneGraphNode('{self.name}')   
+{self.name}.transform = np.array({np.array2string(self.transform, separator=', ')}, dtype=np.float32)                
+{self.name}.childs += [{self.get_children_as_list()}]
       """
 
 
     def get_children_as_list(self):
       s = ""
       if isinstance(self.childs[0], gs.GPUShape):
-        return 
+        return f"insertGPUShape"
       for child in self.childs:
         s += f"{child.name}, "
       r = s[:len(s)- 2]

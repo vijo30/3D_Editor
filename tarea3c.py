@@ -99,7 +99,7 @@ def transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angle
     if imgui.button(label="Save"):
       scene_save = [scene.to_string()]
       scene_saved = generateTree(scene_save, scene)
-      with open("save.py", "w") as fp:
+      with open("save.txt", "w") as fp:
         fp.seek(0)
         for item in scene_saved:
            fp.write("%s\n" % item)
@@ -107,9 +107,7 @@ def transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angle
       print("Saved")
 
 
-
           
-
 
 
     edited, checked = imgui.checkbox("wireframe", not controller.fillPolygon)
