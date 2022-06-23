@@ -61,7 +61,7 @@ def on_key(window, key, scancode, action, mods):
 
 
 
-def transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, scene):
+def transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, scene, initialScene):
     # start new frame context
     imgui.new_frame()
 
@@ -91,10 +91,10 @@ def transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angle
                 tr.scale(scaleX, scaleY, scaleZ)]
                 )
 
-    scene.transform = tr.matmul([const, transform])
+    scene.transform = tr.matmul([initialScene.transform, transform])
     if show:
       if imgui.tree_node(text=str(scene.name)):
-        iterateNode(scene)
+        iterateNode(scene, initialScene)
     
     if imgui.button(label="Save"):
       scene_save = [scene.to_string()]
@@ -139,15 +139,14 @@ def transformGuiOverlayNode(locationX, locationY, locationZ, angleXY, angleYZ, a
     
     return locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ
 
-def iterateNode(scene):
-
+def iterateNode(scene, initialScene):
     for i in range(0,len(scene.childs)):
 
       if imgui.tree_node(text=str(scene.childs[i].name)):
         imgui.same_line()
         imgui.text("(selected)")
         if not isinstance(scene.childs[i].childs[0],GPUShape):
-          iterateNodeRecursive(scene.childs[i])
+          iterateNodeRecursive(scene.childs[i], initialScene.childs[i])
 
         imgui.begin("Configuration sliders: "+ str(scene.childs[i].name), False, imgui.WINDOW_ALWAYS_AUTO_RESIZE)
         
@@ -157,7 +156,7 @@ def iterateNode(scene):
   transformGuiOverlayNode(scene.childs[i].parameters[0], scene.childs[i].parameters[1], scene.childs[i].parameters[2], scene.childs[i].parameters[3], scene.childs[i].parameters[4], 
                           scene.childs[i].parameters[5], scene.childs[i].parameters[6], scene.childs[i].parameters[7], scene.childs[i].parameters[8])
 
-        scene.childs[i].transform = tr.matmul([
+        scene.childs[i].transform = tr.matmul([initialScene.childs[i].transform,
               tr.translate(scene.childs[i].parameters[0], scene.childs[i].parameters[1], scene.childs[i].parameters[2]),
               tr.rotationZ(scene.childs[i].parameters[3]),
               tr.rotationY(scene.childs[i].parameters[4]),
@@ -175,13 +174,13 @@ def iterateNode(scene):
 
     imgui.tree_pop()
 
-def iterateNodeRecursive(scene):
+def iterateNodeRecursive(scene, initialScene):
   for i in range(0,len(scene.childs)):
     if imgui.tree_node(text=str(scene.childs[i].name)):
       imgui.same_line()
       imgui.text("(selected)")
       if not isinstance(scene.childs[i].childs[0],GPUShape):
-          iterateNodeRecursive(scene.childs[i])
+          iterateNodeRecursive(scene.childs[i], initialScene.childs[i])
       imgui.begin("Configuration sliders: "+ str(scene.childs[i].name), False, imgui.WINDOW_ALWAYS_AUTO_RESIZE)
       
       
@@ -190,7 +189,7 @@ def iterateNodeRecursive(scene):
 transformGuiOverlayNode(scene.childs[i].parameters[0], scene.childs[i].parameters[1], scene.childs[i].parameters[2], scene.childs[i].parameters[3], scene.childs[i].parameters[4], 
                         scene.childs[i].parameters[5], scene.childs[i].parameters[6], scene.childs[i].parameters[7], scene.childs[i].parameters[8])
 
-      scene.childs[i].transform = tr.matmul([ 
+      scene.childs[i].transform = tr.matmul([initialScene.childs[i].transform, 
             tr.translate(scene.childs[i].parameters[0], scene.childs[i].parameters[1], scene.childs[i].parameters[2]),
             tr.rotationZ(scene.childs[i].parameters[3]),
             tr.rotationY(scene.childs[i].parameters[4]),
@@ -205,10 +204,6 @@ transformGuiOverlayNode(scene.childs[i].parameters[0], scene.childs[i].parameter
       imgui.tree_pop()
         
         
-
-    
-
-
     
 
 
@@ -268,7 +263,7 @@ camera_theta = np.pi / 4
 cameraZ = 2
 perfMonitor = pm.PerformanceMonitor(glfw.get_time(), 0.5)
 scene = createSystem(lightingPipeline)
-
+initialScene = createSystem(lightingPipeline)
 
 
 # initilize imgui context (see documentation)
@@ -292,7 +287,6 @@ angleXZ = 0.0
 scaleX = 1.0
 scaleY = 1.0
 scaleZ = 1.0
-const = scene.transform 
 
 def generateTree(a, scene):
   for i in range(0,len(scene.childs)):
@@ -303,8 +297,7 @@ def generateTree(a, scene):
   
   return a[::-1]
 
-print(scene.childs[0].to_string())
-print(sg.findNode(scene, 'sunNode').transform)
+
 
 while not glfw.window_should_close(window):
 
@@ -366,7 +359,7 @@ while not glfw.window_should_close(window):
 
     
     locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, scene = \
-        transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, scene)
+        transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, scene, initialScene)
 
     # Setting uniforms and drawing the Quad
 
@@ -411,6 +404,6 @@ while not glfw.window_should_close(window):
 
 # freeing GPU memory
 scene.clear()
-
+initialScene.clear()
 impl.shutdown()
 glfw.terminate()
