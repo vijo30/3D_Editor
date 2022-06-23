@@ -11,6 +11,8 @@ pip install imgui[glfw]
 Another example:
 https://github.com/swistakm/pyimgui/blob/master/doc/examples/integrations_glfw3.py#L2
 """
+from math import radians
+from turtle import pos
 import glfw
 import json
 from OpenGL.GL import *
@@ -41,6 +43,8 @@ __license__ = "MIT"
 # A class to store the application control
 class Controller:
     fillPolygon = True
+    camRotation = False
+    showAxis = True
 
 
 # we will use the global controller as communication with the callback function
@@ -52,12 +56,20 @@ def on_key(window, key, scancode, action, mods):
         return
 
     global controller
+    global view
 
-    if key == glfw.KEY_SPACE:
-        controller.fillPolygon = not controller.fillPolygon
 
-    elif key == glfw.KEY_ESCAPE:
+    if key == glfw.KEY_ESCAPE:
         glfw.set_window_should_close(window, True)
+        
+    elif key == glfw.KEY_LEFT_CONTROL:
+      controller.showAxis = not controller.showAxis
+
+        
+    elif key == glfw.KEY_Z:
+      controller.camRotation = not controller.camRotation
+      glfw.set_cursor_pos(window, width/2, height/2)
+
 
 
 
@@ -77,9 +89,9 @@ def transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angle
     edited, angleXY = imgui.slider_float("Angle XY", angleXY, -np.pi, np.pi)
     edited, angleYZ = imgui.slider_float("Angle YZ", angleYZ, -np.pi, np.pi)
     edited, angleXZ = imgui.slider_float("Angle XZ", angleXZ, -np.pi, np.pi)
-    edited, scaleX = imgui.slider_float("Scale X", scaleX, 0.0, 4.0)
-    edited, scaleY = imgui.slider_float("Scale Y", scaleY, 0.0, 4.0)
-    edited, scaleZ = imgui.slider_float("Scale Z", scaleZ, 0.0, 4.0)
+    edited, scaleX = imgui.slider_float("Scale X", scaleX, 0.0, 10.0)
+    edited, scaleY = imgui.slider_float("Scale Y", scaleY, 0.0, 10.0)
+    edited, scaleZ = imgui.slider_float("Scale Z", scaleZ, 0.0, 10.0)
     show, _ = imgui.collapsing_header("Nodes") 
     global controller
     
@@ -133,9 +145,9 @@ def transformGuiOverlayNode(locationX, locationY, locationZ, angleXY, angleYZ, a
     edited, angleXY = imgui.slider_float("Angle XY", angleXY, -np.pi, np.pi)
     edited, angleYZ = imgui.slider_float("Angle YZ", angleYZ, -np.pi, np.pi)
     edited, angleXZ = imgui.slider_float("Angle XZ", angleXZ, -np.pi, np.pi)
-    edited, scaleX = imgui.slider_float("Scale X", scaleX, 0.0, 4.0)
-    edited, scaleY = imgui.slider_float("Scale Y", scaleY, 0.0, 4.0)
-    edited, scaleZ = imgui.slider_float("Scale Z", scaleZ, 0.0, 4.0)
+    edited, scaleX = imgui.slider_float("Scale X", scaleX, 0.0, 10.0)
+    edited, scaleY = imgui.slider_float("Scale Y", scaleY, 0.0, 10.0)
+    edited, scaleZ = imgui.slider_float("Scale Z", scaleZ, 0.0, 10.0)
     
     return locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ
 
@@ -215,8 +227,14 @@ if not glfw.init():
 
 width = 1280
 height = 720
+lastX = width/2
+lastY = height/2
+firstMouse = True
+yaw = -90
+pitch = 0
 title = "Interactive Transform Generator"
 window = glfw.create_window(width, height, title, None, None)
+
 
 if not window:
     glfw.terminate()
@@ -227,6 +245,51 @@ def window_resize(window, width, height):
     glViewport(0, 0, width, height)
     glUniformMatrix4fv(glGetUniformLocation(lightingPipeline.shaderProgram, "projection"), 1, GL_TRUE, projection)
 
+
+
+
+
+def mouse_callback(window, xpos, ypos):
+  global firstMouse, lastX, lastY, yaw, pitch, camFront, camUp, camRight
+  if firstMouse:
+    lastX = xpos
+    lastY = ypos
+    firstMouse = False
+    
+  xoffset = xpos - lastX
+  yoffset = lastY - ypos
+  lastX = xpos
+  lastY = ypos
+  
+  sensitivity = 0.3
+  xoffset *= sensitivity
+  yoffset *= sensitivity
+  
+  yaw += xoffset
+  pitch += yoffset
+  
+  if pitch > 89.0:
+    pitch = 89.0
+  if pitch < -89.0:
+    pitch = -89.0
+    
+  frontX = np.cos(radians(yaw)) * np.cos(radians(pitch))
+  frontY = np.sin(radians(pitch))
+  frontZ = np.sin(radians(yaw)) * np.cos(radians(pitch))
+  
+  
+  front = np.array([frontX,frontY,frontZ])
+
+  if controller.camRotation:
+    camFront = front/np.linalg.norm(front)
+    camRight = np.cross(camFront, np.array([0,1,0]))/np.linalg.norm(np.cross(camFront, np.array([0,1,0])))
+    camUp = np.cross(camRight,camFront)/np.linalg.norm(np.cross(camRight,camFront))
+    glfw.set_input_mode(window, glfw.CURSOR, glfw.CURSOR_DISABLED)
+    
+
+  else:
+    glfw.set_input_mode(window, glfw.CURSOR, glfw.CURSOR_NORMAL)
+    
 glfw.make_context_current(window)
 
 
@@ -238,7 +301,8 @@ def createGPUShape(pipeline, shape):
 
 # Creating our shader program and telling OpenGL to use it
 lightingPipeline = ls.SimplePhongShaderProgram()
-glUseProgram(lightingPipeline.shaderProgram)
+mvpPipeline = es.SimpleModelViewProjectionShaderProgram()
+
 
 # Setting up the clear screen color
 glClearColor(0.8, 0.8, 0.8, 1.0)
@@ -246,10 +310,11 @@ glClearColor(0.8, 0.8, 0.8, 1.0)
 glEnable(GL_DEPTH_TEST)
 projection = tr.perspective(45, float(width) / float(height), 0.1, 100)
 # Creating shapes on GPU memory
+glUseProgram(mvpPipeline.shaderProgram)
+glUniformMatrix4fv(glGetUniformLocation(mvpPipeline.shaderProgram, "projection"), 1, GL_TRUE, projection)
 
-
-
-
+glUseProgram(lightingPipeline.shaderProgram)
+glUniformMatrix4fv(glGetUniformLocation(lightingPipeline.shaderProgram, "projection"), 1, GL_TRUE, projection)
 
 
 
@@ -259,8 +324,6 @@ projection = tr.perspective(45, float(width) / float(height), 0.1, 100)
 
 
 t0 = glfw.get_time()
-camera_theta = np.pi / 4
-cameraZ = 2
 perfMonitor = pm.PerformanceMonitor(glfw.get_time(), 0.5)
 scene = createSystem(lightingPipeline)
 initialScene = createSystem(lightingPipeline)
@@ -270,11 +333,25 @@ initialScene = createSystem(lightingPipeline)
 imgui.create_context()
 impl = GlfwRenderer(window)
 
+viewPos = np.array([0.0, 0.0, 1.0])
+camTarget = np.array([0.0, 0.0, 0.0])
+
+camFront = np.array([0.0, 0.0, -1.0])
+camUp = np.array([0.0, 1.0, 0.0])
+camRight = np.cross(camFront, camUp)/np.linalg.norm(np.cross(camFront, camUp))
+
+
+
 # Connecting the callback function 'on_key' to handle keyboard events
 # It is important to set the callback after the imgui setup
 glfw.set_key_callback(window, on_key)
 glfw.set_window_size_callback(window, window_resize)
+glfw.set_cursor_pos_callback(window, mouse_callback)
 
+cpuAxis = bs.createAxis(7)
+gpuAxis = es.GPUShape().initBuffers()
+mvpPipeline.setupVAO(gpuAxis)
+gpuAxis.fillBuffers(cpuAxis.vertices, cpuAxis.indices, GL_STATIC_DRAW)
 
 
 
@@ -321,6 +398,7 @@ while not glfw.window_should_close(window):
     t1 = glfw.get_time()
     dt = t1 - t0
     t0 = t1
+    camSpeed = 2.5*dt
     # Clearing the screen in both, color and depth
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
@@ -330,30 +408,45 @@ while not glfw.window_should_close(window):
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
     else:
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
-
+    
 
 
     # imgui function
     impl.process_inputs()
-    if (glfw.get_key(window, glfw.KEY_LEFT) == glfw.PRESS):
-        camera_theta -= 2 * dt
+    if (glfw.get_key(window, glfw.KEY_A) == glfw.PRESS):
+        viewPos[0] -= camSpeed * camRight[0]
+        viewPos[1] -= camSpeed * camRight[1]
+        viewPos[2] -= camSpeed * camRight[2]
 
-    if (glfw.get_key(window, glfw.KEY_RIGHT) == glfw.PRESS):
-        camera_theta += 2 * dt
+    if (glfw.get_key(window, glfw.KEY_D) == glfw.PRESS):
+        viewPos[0] += camSpeed * camRight[0]
+        viewPos[1] += camSpeed * camRight[1]
+        viewPos[2] += camSpeed * camRight[2]
         
-    if (glfw.get_key(window, glfw.KEY_UP) == glfw.PRESS):
-        cameraZ += 2 * dt
+    if (glfw.get_key(window, glfw.KEY_W) == glfw.PRESS):
+        viewPos[0] += camSpeed * camFront[0]
+        viewPos[1] += camSpeed * camFront[1]
+        viewPos[2] += camSpeed * camFront[2]
         
-    if (glfw.get_key(window, glfw.KEY_DOWN) == glfw.PRESS):
-        cameraZ -= 2 * dt    
-    camX = 3 * np.sin(camera_theta)
-    camY = 3 * np.cos(camera_theta)
-    camZ = cameraZ
-    viewPos = np.array([camX, camY, camZ])
+    if (glfw.get_key(window, glfw.KEY_S) == glfw.PRESS):
+        viewPos[0] -= camSpeed * camFront[0]
+        viewPos[1] -= camSpeed * camFront[1]
+        viewPos[2] -= camSpeed * camFront[2]  
+        
+    if (glfw.get_key(window, glfw.KEY_SPACE) == glfw.PRESS):
+        viewPos[0] += camSpeed * camUp[0]
+        viewPos[1] += camSpeed * camUp[1]
+        viewPos[2] += camSpeed * camUp[2]
+        
+    if (glfw.get_key(window, glfw.KEY_LEFT_SHIFT) == glfw.PRESS):
+        viewPos[0] -= camSpeed * camUp[0]
+        viewPos[1] -= camSpeed * camUp[1]
+        viewPos[2] -= camSpeed * camUp[2]    
+
     view = tr.lookAt(
       viewPos,
-      np.array([0, 0, 0]),
-      np.array([0, 0, 1])
+      viewPos + camFront,
+      camUp
       )
     
 
@@ -364,9 +457,14 @@ while not glfw.window_should_close(window):
     # Setting uniforms and drawing the Quad
 
 
+    if controller.showAxis:
+      glUseProgram(mvpPipeline.shaderProgram)
+      glUniformMatrix4fv(glGetUniformLocation(mvpPipeline.shaderProgram, "projection"), 1, GL_TRUE, projection)
+      glUniformMatrix4fv(glGetUniformLocation(mvpPipeline.shaderProgram, "view"), 1, GL_TRUE, view)
+      glUniformMatrix4fv(glGetUniformLocation(mvpPipeline.shaderProgram, "model"), 1, GL_TRUE, tr.identity())
+      mvpPipeline.drawCall(gpuAxis, GL_LINES)  
     
-    
-    
+    glUseProgram(lightingPipeline.shaderProgram)
     # Setting all uniform shader variables
 
     # White light in all components: ambient, diffuse and specular.

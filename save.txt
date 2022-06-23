@@ -24,10 +24,10 @@ moonPosition.childs += [moonRotation]
       
                                                                 
 moonSystem = sg.SceneGraphNode('moonSystem')   
-moonSystem.transform = np.array([[1., 0., 0., 0.],
- [0., 1., 0., 0.],
- [0., 0., 1., 0.],
- [0., 0., 0., 1.]], dtype=np.float32)                
+moonSystem.transform = np.array([[ 2.9768593 ,  0.20188875,  3.1736705 ,  0.        ],
+ [ 0.        ,  4.423639  , -0.2946324 ,  0.        ],
+ [-2.9272742 ,  0.20530856,  3.2274292 ,  0.        ],
+ [ 0.        ,  0.        ,  0.        ,  1.        ]], dtype=np.float32)                
 moonSystem.childs += [moonPosition]
       
                                                                 
@@ -80,9 +80,9 @@ sunRotation.childs += [sunNode]
       
                                                                 
 solarSystem = sg.SceneGraphNode('solarSystem')   
-solarSystem.transform = np.array([[1., 0., 0., 0.],
- [0., 1., 0., 0.],
- [0., 0., 1., 0.],
- [0., 0., 0., 1.]], dtype=np.float32)                
+solarSystem.transform = np.array([[ 0.78243417, -0.3360395 ,  0.5242844 ,  0.        ],
+ [ 0.5527017 ,  0.7626258 , -0.3360395 ,  0.        ],
+ [-0.28691033,  0.5527017 ,  0.78243417,  0.        ],
+ [ 0.        ,  0.        ,  0.        ,  1.        ]], dtype=np.float32)                
 solarSystem.childs += [sunRotation, earthSystem]
       
