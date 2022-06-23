@@ -68,7 +68,6 @@ def on_key(window, key, scancode, action, mods):
         
     elif key == glfw.KEY_Z:
       controller.camRotation = not controller.camRotation
-      glfw.set_cursor_pos(window, width/2, height/2)
 
 
 
@@ -261,7 +260,7 @@ def mouse_callback(window, xpos, ypos):
   lastX = xpos
   lastY = ypos
   
-  sensitivity = 0.3
+  sensitivity = 0.2
   xoffset *= sensitivity
   yoffset *= sensitivity
   
@@ -348,7 +347,7 @@ glfw.set_key_callback(window, on_key)
 glfw.set_window_size_callback(window, window_resize)
 glfw.set_cursor_pos_callback(window, mouse_callback)
 
-cpuAxis = bs.createAxis(7)
+cpuAxis = bs.createAxis(50)
 gpuAxis = es.GPUShape().initBuffers()
 mvpPipeline.setupVAO(gpuAxis)
 gpuAxis.fillBuffers(cpuAxis.vertices, cpuAxis.indices, GL_STATIC_DRAW)
