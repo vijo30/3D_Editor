@@ -46,19 +46,23 @@ class Controller:
     camRotation = False
     showAxis = True
 
+width = 1280
+height = 720
+class CursorContainer:
+  X = width/2
+  Y = height/2
 
 # we will use the global controller as communication with the callback function
 controller = Controller()
-
+cursorContainer = CursorContainer()
 
 def on_key(window, key, scancode, action, mods):
     if action != glfw.PRESS:
         return
 
     global controller
-    global view
-
-
+    global cursorContainer
+    
     if key == glfw.KEY_ESCAPE:
         glfw.set_window_should_close(window, True)
         
@@ -68,7 +72,16 @@ def on_key(window, key, scancode, action, mods):
         
     elif key == glfw.KEY_Z:
       controller.camRotation = not controller.camRotation
-
+      
+      if not controller.camRotation:
+        Xpos, Ypos = glfw.get_cursor_pos(window)
+        cursorContainer.X = Xpos
+        cursorContainer.Y = Ypos
+      if controller.camRotation:
+        print(cursorContainer.X, cursorContainer.Y)
+        glfw.set_cursor_pos(window, cursorContainer.X, cursorContainer.Y)
+        
+        
 
 
 
@@ -224,8 +237,7 @@ transformGuiOverlayNode(scene.childs[i].parameters[0], scene.childs[i].parameter
 if not glfw.init():
     glfw.set_window_should_close(window, True)
 
-width = 1280
-height = 720
+
 lastX = width/2
 lastY = height/2
 firstMouse = True
@@ -250,6 +262,7 @@ def window_resize(window, width, height):
 
 def mouse_callback(window, xpos, ypos):
   global firstMouse, lastX, lastY, yaw, pitch, camFront, camUp, camRight
+  #print(xpos, ypos)
   if firstMouse:
     lastX = xpos
     lastY = ypos
@@ -449,6 +462,7 @@ while not glfw.window_should_close(window):
       )
     
 
+      
     
     locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, scene = \
         transformGuiOverlay(locationX, locationY, locationZ, angleXY, angleYZ, angleXZ, scaleX, scaleY, scaleZ, scene, initialScene)
