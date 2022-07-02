@@ -16,18 +16,18 @@ moonRotation.childs += [moonNode]
       
                                                                 
 moonPosition = sg.SceneGraphNode('moonPosition')   
-moonPosition.transform = np.array([[1. , 0. , 0. , 0.3],
- [0. , 1. , 0. , 0. ],
- [0. , 0. , 1. , 0. ],
- [0. , 0. , 0. , 1. ]], dtype=np.float32)                
+moonPosition.transform = np.array([[ 7.9294724 , -4.449375  ,  4.1625147 , -0.62799996],
+ [ 4.519079  ,  8.877117  ,  0.880169  ,  0.        ],
+ [-4.0867333 ,  1.1831459 ,  9.049795  ,  0.206     ],
+ [ 0.        ,  0.        ,  0.        ,  1.        ]], dtype=np.float32)                
 moonPosition.childs += [moonRotation]
       
                                                                 
 moonSystem = sg.SceneGraphNode('moonSystem')   
-moonSystem.transform = np.array([[ 2.9768593 ,  0.20188875,  3.1736705 ,  0.        ],
- [ 0.        ,  4.423639  , -0.2946324 ,  0.        ],
- [-2.9272742 ,  0.20530856,  3.2274292 ,  0.        ],
- [ 0.        ,  0.        ,  0.        ,  1.        ]], dtype=np.float32)                
+moonSystem.transform = np.array([[1., 0., 0., 0.],
+ [0., 1., 0., 0.],
+ [0., 0., 1., 0.],
+ [0., 0., 0., 1.]], dtype=np.float32)                
 moonSystem.childs += [moonPosition]
       
                                                                 
@@ -40,10 +40,10 @@ earthNode.childs += [insertGPUShape]
       
                                                                 
 earthRotation = sg.SceneGraphNode('earthRotation')   
-earthRotation.transform = np.array([[1., 0., 0., 0.],
- [0., 1., 0., 0.],
- [0., 0., 1., 0.],
- [0., 0., 0., 1.]], dtype=np.float32)                
+earthRotation.transform = np.array([[ 2.474,  0.   ,  0.   ,  0.   ],
+ [ 0.   ,  2.526,  0.   , -0.103],
+ [ 0.   ,  0.   ,  2.32 ,  0.   ],
+ [ 0.   ,  0.   ,  0.   ,  1.   ]], dtype=np.float32)                
 earthRotation.childs += [earthNode]
       
                                                                 
@@ -56,10 +56,10 @@ earthPosition.childs += [earthRotation, moonSystem]
       
                                                                 
 earthSystem = sg.SceneGraphNode('earthSystem')   
-earthSystem.transform = np.array([[1., 0., 0., 0.],
- [0., 1., 0., 0.],
- [0., 0., 1., 0.],
- [0., 0., 0., 1.]], dtype=np.float32)                
+earthSystem.transform = np.array([[ 0.928,  0.   ,  0.   ,  0.   ],
+ [ 0.   ,  0.928,  0.   ,  0.   ],
+ [ 0.   ,  0.   ,  0.928, -0.103],
+ [ 0.   ,  0.   ,  0.   ,  1.   ]], dtype=np.float32)                
 earthSystem.childs += [earthPosition]
       
                                                                 
@@ -72,17 +72,17 @@ sunNode.childs += [insertGPUShape]
       
                                                                 
 sunRotation = sg.SceneGraphNode('sunRotation')   
-sunRotation.transform = np.array([[1., 0., 0., 0.],
- [0., 1., 0., 0.],
- [0., 0., 1., 0.],
- [0., 0., 0., 1.]], dtype=np.float32)                
+sunRotation.transform = np.array([[1.   , 0.   , 0.   , 0.   ],
+ [0.   , 1.   , 0.   , 0.103],
+ [0.   , 0.   , 1.   , 0.   ],
+ [0.   , 0.   , 0.   , 1.   ]], dtype=np.float32)                
 sunRotation.childs += [sunNode]
       
                                                                 
 solarSystem = sg.SceneGraphNode('solarSystem')   
-solarSystem.transform = np.array([[ 0.78243417, -0.3360395 ,  0.5242844 ,  0.        ],
- [ 0.5527017 ,  0.7626258 , -0.3360395 ,  0.        ],
- [-0.28691033,  0.5527017 ,  0.78243417,  0.        ],
+solarSystem.transform = np.array([[ 2.6013112 ,  0.18155824, -0.34093884, -0.412     ],
+ [-0.16932374,  2.6213968 ,  0.10811911,  0.309     ],
+ [ 0.34080815, -0.08340389,  2.6560254 ,  0.        ],
  [ 0.        ,  0.        ,  0.        ,  1.        ]], dtype=np.float32)                
 solarSystem.childs += [sunRotation, earthSystem]
       

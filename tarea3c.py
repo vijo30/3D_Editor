@@ -12,14 +12,10 @@ Another example:
 https://github.com/swistakm/pyimgui/blob/master/doc/examples/integrations_glfw3.py#L2
 """
 from math import radians
-from turtle import pos
 import glfw
-import json
 from OpenGL.GL import *
-import OpenGL.GL.shaders
 import numpy as np
 import sys
-import random
 import imgui
 from imgui.integrations.glfw import GlfwRenderer
 import os.path
@@ -78,7 +74,6 @@ def on_key(window, key, scancode, action, mods):
         cursorContainer.X = Xpos
         cursorContainer.Y = Ypos
       if controller.camRotation:
-        print(cursorContainer.X, cursorContainer.Y)
         glfw.set_cursor_pos(window, cursorContainer.X, cursorContainer.Y)
         
         
